@@ -1,4 +1,14 @@
+import { useEffect, useState } from "react";
 import { CheckCheck, CloudUpload, FileLock2, MapPin, MessageSquare, Siren } from "lucide-react";
+import { api, hasBackend } from "@/lib/api";
+
+const ICONS: Record<string, typeof Siren> = {
+  siren: Siren,
+  pin: MapPin,
+  upload: CloudUpload,
+  message: MessageSquare,
+  check: CheckCheck,
+};
 
 const EVENTS = [
   {
@@ -51,18 +61,52 @@ const TONE: Record<string, string> = {
 };
 
 export function IncidentTimeline() {
+  const [events, setEvents] = useState(EVENTS);
+  const [reference, setReference] = useState("SRK-2026-0907");
+
+  useEffect(() => {
+    if (!hasBackend) return;
+    let active = true;
+    api
+      .latestIncident()
+      .then((incident) => {
+        if (!active || incident.events.length === 0) return;
+        setReference(incident.reference);
+        setEvents(
+          incident.events.map((e) => ({
+            icon: ICONS[e.icon] ?? CheckCheck,
+            title: e.title,
+            at: new Date(e.occurredAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            }),
+            detail: e.detail ?? "",
+            tone: e.tone,
+          })),
+        );
+      })
+      .catch(() => {
+        /* keep the sample timeline when no incident is stored yet */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section id="timeline" className="grid gap-4 lg:grid-cols-2">
       <div className="glass rounded-3xl p-5 sm:p-6">
         <h2 className="font-display text-lg font-bold">Incident timeline</h2>
         <p className="text-sm text-muted-foreground">
-          Chain-of-custody log for incident #SRK-2026-0907.
+          Chain-of-custody log for incident #{reference}.
         </p>
 
         <ol className="mt-5 space-y-4">
-          {EVENTS.map(({ icon: Icon, title, at, detail, tone }, i) => (
+          {events.map(({ icon: Icon, title, at, detail, tone }, i) => (
             <li key={title} className="relative flex gap-4 pl-1">
-              {i !== EVENTS.length - 1 && (
+              {i !== events.length - 1 && (
                 <span className="absolute left-[1.35rem] top-11 h-[calc(100%-1.5rem)] w-px bg-border" />
               )}
               <span
