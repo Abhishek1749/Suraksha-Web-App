@@ -42,9 +42,11 @@ export function ChatWorkspace() {
     setBusy(true);
     setError(null);
     try {
-      const { reply } = await ask({
-        data: { messages: next.filter((m) => m !== GREETING).slice(-16) },
-      });
+      const history = next.filter((m) => m !== GREETING).slice(-16);
+      // Spring Boot backend when it is configured, built-in AI route otherwise.
+      const { reply } = hasBackend
+        ? await api.assistant(history)
+        : await ask({ data: { messages: history } });
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The assistant could not answer.");

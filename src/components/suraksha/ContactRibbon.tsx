@@ -1,6 +1,11 @@
+import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
+import { api, hasBackend } from "@/lib/api";
 
-const CONTACTS = [
+type Contact = { name: string; number: string; tone: string };
+
+/** Shown until (or unless) the Spring Boot backend answers with saved contacts. */
+const CONTACTS: Contact[] = [
   { name: "Police", number: "100", tone: "crimson" },
   { name: "Emergency", number: "112", tone: "crimson" },
   { name: "Women helpline", number: "1091", tone: "emerald" },
@@ -10,6 +15,26 @@ const CONTACTS = [
 ];
 
 export function ContactRibbon() {
+  const [contacts, setContacts] = useState<Contact[]>(CONTACTS);
+
+  useEffect(() => {
+    if (!hasBackend) return;
+    let active = true;
+    api
+      .contacts()
+      .then((rows) => {
+        if (active && rows.length > 0) {
+          setContacts(rows.map((r) => ({ name: r.name, number: r.number, tone: r.tone })));
+        }
+      })
+      .catch(() => {
+        /* keep the built-in helplines visible if the server is down */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section id="contacts" className="glass rounded-3xl p-5 sm:p-6">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
@@ -23,7 +48,7 @@ export function ContactRibbon() {
       </div>
 
       <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {CONTACTS.map((c) => (
+        {contacts.map((c) => (
           <li key={c.number}>
             <a
               href={`tel:${c.number.replace(/\s/g, "")}`}
