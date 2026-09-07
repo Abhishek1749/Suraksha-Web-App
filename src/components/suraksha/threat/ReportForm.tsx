@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapPinned, Paperclip, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { api, hasBackend } from "@/lib/api";
 
 const KINDS = ["Harassment", "Stalking", "Poor lighting", "Suspicious activity"] as const;
 const RISK = ["Low", "Moderate", "High"] as const;
@@ -20,6 +21,24 @@ export function ReportForm() {
   const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<string[]>([]);
   const [geo, setGeo] = useState("17.4421° N, 78.3915° E · Sector 22, Hyderabad");
+  const [monthCount, setMonthCount] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!hasBackend) return;
+    let active = true;
+    api
+      .reportStats()
+      .then((s) => {
+        if (active) setMonthCount(s.reportsThisMonth);
+      })
+      .catch(() => {
+        /* fall back to the static badge */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <section id="report" className="glass rounded-3xl p-5 sm:p-6">
@@ -31,16 +50,34 @@ export function ReportForm() {
           </p>
         </div>
         <span className="rounded-full bg-crimson/12 px-3 py-1 text-[11px] font-semibold text-crimson ring-1 ring-crimson/30">
-          412 reports this month
+          {monthCount ?? 412} reports this month
         </span>
       </div>
 
       <form
         className="mt-5 grid gap-5 lg:grid-cols-2"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
+          const place = geo.split("·")[1]?.trim() ?? "your location";
+
+          if (hasBackend) {
+            setSaving(true);
+            try {
+              await api.createReport({ kind, risk, location: geo, notes, attachments: files });
+              const stats = await api.reportStats().catch(() => null);
+              if (stats) setMonthCount(stats.reportsThisMonth);
+            } catch (err) {
+              setSaving(false);
+              toast.error("Report not saved", {
+                description: err instanceof Error ? err.message : "Could not reach the server.",
+              });
+              return;
+            }
+            setSaving(false);
+          }
+
           toast.success("Report submitted", {
-            description: `${kind} · ${risk} risk · tagged to ${geo.split("·")[1]?.trim() ?? "your location"}`,
+            description: `${kind} · ${risk} risk · tagged to ${place}`,
           });
           setNotes("");
           setFiles([]);
@@ -170,9 +207,11 @@ export function ReportForm() {
 
           <button
             type="submit"
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold text-primary-foreground transition-colors hover:bg-crimson/90"
+            disabled={saving}
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-crimson text-sm font-bold text-primary-foreground transition-colors hover:bg-crimson/90 disabled:opacity-60"
           >
-            <ShieldAlert className="size-4" aria-hidden /> Submit report
+            <ShieldAlert className="size-4" aria-hidden />{" "}
+            {saving ? "Submitting…" : "Submit report"}
           </button>
         </div>
       </form>
