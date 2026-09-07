@@ -1,8 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Siren, Activity, Users, Navigation } from "lucide-react";
+import { api, hasBackend } from "@/lib/api";
 
 const HOLD_MS = 3000;
+
+/** Record the alert on the Spring Boot backend when it is configured. */
+function recordSos(source: string, coords?: GeolocationCoordinates) {
+  if (!hasBackend) return;
+  void api
+    .triggerSos({
+      deviceId: "SRK-2210",
+      location: source,
+      latitude: coords?.latitude,
+      longitude: coords?.longitude,
+      accuracyMeters: coords ? Math.round(coords.accuracy) : undefined,
+    })
+    .catch(() => {
+      /* the on-device alert already fired; server logging is best-effort */
+    });
+}
 
 export function SosHero() {
   const [progress, setProgress] = useState(0);
