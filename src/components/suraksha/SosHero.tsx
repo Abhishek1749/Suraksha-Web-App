@@ -35,18 +35,24 @@ export function SosHero() {
     });
     if (typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
+        (pos) => {
+          recordSos(source, pos.coords);
           toast.error("SOS dispatched", {
             id,
             description: `${source} · location ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)} (±${Math.round(pos.coords.accuracy)} m) attached`,
-          }),
-        () =>
+          });
+        },
+        () => {
+          recordSos(source);
           toast.error("SOS dispatched", {
             id,
             description: `${source} · location unavailable — allow location in Permissions so responders can find you`,
-          }),
+          });
+        },
         { enableHighAccuracy: true, timeout: 8000 },
       );
+    } else {
+      recordSos(source);
     }
     window.setTimeout(() => setArmed(false), 6000);
   }, []);
