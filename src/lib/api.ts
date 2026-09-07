@@ -112,19 +112,19 @@ export const api = {
   createReport: (body: {
     kind: string;
     risk: string;
-    location?: string;
-    notes?: string;
-    attachments?: string[];
+    location?: string | undefined;
+    notes?: string | undefined;
+    attachments?: string[] | undefined;
   }) => apiFetch<ApiReport>("/api/reports", { method: "POST", body: JSON.stringify(body) }),
 
   latestIncident: () => apiFetch<ApiIncident>("/api/incidents/latest"),
 
   triggerSos: (body: {
-    deviceId?: string;
-    location?: string;
-    latitude?: number;
-    longitude?: number;
-    accuracyMeters?: number;
+    deviceId?: string | undefined;
+    location?: string | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
+    accuracyMeters?: number | undefined;
   }) => apiFetch<ApiIncident>("/api/sos", { method: "POST", body: JSON.stringify(body) }),
 
   assistant: (messages: { role: "user" | "assistant"; content: string }[]) =>
