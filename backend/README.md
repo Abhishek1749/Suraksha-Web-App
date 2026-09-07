@@ -17,7 +17,7 @@ export MYSQL_USER="root"
 export MYSQL_PASSWORD="yourpassword"
 export LOVABLE_API_KEY="..."     # only needed for the AI assistant
 
-./mvnw spring-boot:run            # or: mvn spring-boot:run
+mvn spring-boot:run
 ```
 
 Tables are created automatically (`ddl-auto: update`) and helplines + risk
