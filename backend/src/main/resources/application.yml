@@ -1,45 +1,31 @@
-server:
-  port: ${PORT:8081}
-
 spring:
-  application:
-    name: suraksha-backend
   datasource:
-    # MySQL locally, TiDB Cloud in production (same driver, same URL shape).
-    # TiDB Cloud example:
-    # jdbc:mysql://gateway01.<region>.prod.aws.tidbcloud.com:4000/suraksha?sslMode=VERIFY_IDENTITY&enabledTLSProtocols=TLSv1.2,TLSv1.3
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/suraksha?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${MYSQL_USER:root}
-    password: ${MYSQL_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:10}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: false
-  jackson:
-    default-property-inclusion: non_null
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
-suraksha:
-  cors:
-    # Comma separated list of allowed frontend origins.
-    allowed-origins: ${CORS_ORIGINS:http://localhost:8080,http://localhost:5173,http://localhost:3000}
-  ai:
-    base-url: ${AI_BASE_URL:https://ai.gateway.lovable.dev/v1}
-    api-key: ${LOVABLE_API_KEY:}
-    model: ${AI_MODEL:google/gemini-3.8-flash}
+server:
+  port: ${PORT:8080}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
 
-logging:
-  level:
-    com.suraksha: INFO
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+
+cors:
+  allowed-origins: ${CORS_ORIGINS}
