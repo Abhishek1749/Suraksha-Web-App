@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { ArrowUp, Bot, ShieldQuestion, Sparkle, User } from "lucide-react";
 import { askSafetyAssistant } from "@/lib/assistant.functions";
+import { api, hasBackend } from "@/lib/api";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
