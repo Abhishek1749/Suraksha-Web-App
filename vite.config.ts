@@ -6,7 +6,7 @@ export default defineConfig({
   },
   vite: {
     nitro: {
-      preset: "static",
+      preset: "render-com",
     },
   },
 });
